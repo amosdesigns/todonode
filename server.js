@@ -46,8 +46,7 @@ app.get('/todos/:id',  function (req, res) { //middleware.requireAuthentication
         }
     });
     if(matchedTodo){
-        res.send('asking for todo with ID of: ' + todoId);
-        res.json(todos);
+        res.json(matchedTodo);
     } else {
         res.status(404).send();
     }
