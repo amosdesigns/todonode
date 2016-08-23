@@ -5,21 +5,12 @@
  * Created by Jerome on 8/19/16.
  */
 var express = require('express'),
+    bodyParser = require('body-parser'),
     PORT = process.env.PORT || 3000,
-    todos = [{
-        id: 1,
-        description: 'meet mom for lunch',
-        completed: false
-    }, {
-        id: 2,
-        description: 'do node course for the next 2 weeks',
-        completed: false
-    }, {
-        id: 3,
-        description: 'go to the apple store for a new computer',
-        completed: true
-    }],
+    todos = [],
+    todoNextId = 1,
     app = express();
+app.use(bodyParser.json());
 
 // var middleware = require('./middleware.js');
 //app.use(middleware.logger);
@@ -51,6 +42,15 @@ app.get('/todos/:id',  function (req, res) { //middleware.requireAuthentication
         res.status(404).send();
     }
 });
+
+//POST /todos
+app.post('/todos', function (req, res) {
+    var body = req.body;
+        body.id = todoNextId++;
+    todos.push(body);
+    res.json(body);
+    }
+);
 
 app.listen(PORT, function () {
     console.log('Express Server started on PORT: '+PORT+"!");
