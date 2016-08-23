@@ -6,6 +6,15 @@
  */
 var express = require('express'),
     PORT = process.env.PORT || 3000,
+    todos = [{
+        id: 1,
+        description: 'meet mom for lunch',
+        completed: false
+    }, {
+        id: 2,
+        description: 'do node course for the next 2 weeks',
+        completed: false
+    }],
     app = express();
 
 // var middleware = require('./middleware.js');
