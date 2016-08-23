@@ -1,0 +1,26 @@
+{
+  "name": "todonode",
+  "version": "1.0.0",
+  "description": "to do node app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amosdesigns/todonode.git"
+  },
+  "keywords": [
+    "todo",
+    "app"
+  ],
+  "author": "jerome amos",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/amosdesigns/todonode/issues"
+  },
+  "homepage": "https://github.com/amosdesigns/todonode#readme",
+  "dependencies": {
+    "express": "^4.13.3"
+  }
+}
