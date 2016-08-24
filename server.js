@@ -51,8 +51,24 @@ app.post('/todos', function (req, res) {
         body.id = todoNextId++;
         todos.push(body);
         res.json(body);
-    }
-);
+    });
+
+// DELETE /todos/:id
+app.delete('/todos/:id', function (req, res) {
+    "use strict";
+    var todoId = parseInt(req.params.id, 10),
+        matchedTodo = _.findWhere(todos, {id: todoId});
+    var x = _.without(todos, matchedTodo);
+    console.log(x);
+   if (!matchedTodo) {
+       res.status(404)
+          .json({"error":"no todos found with that id"})
+          .send();
+    } else {
+       todos = _.without(todos, matchedTodo);
+       res.json(matchedTodo);
+   }
+});
 
 app.listen(PORT, function () {
     console.log('Express Server started on PORT: ' + PORT + "!");
