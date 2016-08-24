@@ -23,10 +23,25 @@ app.get('/', function (req, res) { //middleware.requireAuthentication
 // app.use(express.static(__dirname +'/public'));
 
 
-// GET /todos
+// GET /todos?completed=true
 app.get('/todos', function (req, res) { //middleware.requireAuthentication
     "use strict";
-    res.json(todos);
+    var queryParams = req.query,
+        filteredTodos = todos;
+
+    // if has porperty && completed === 'true'
+
+    // filterTodos = _. where()
+    // else if has prop && completed if 'false'
+
+    if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'true') {
+        filteredTodos = _.where(filteredTodos, {completed: true});
+    } else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
+        filteredTodos = _.where(filteredTodos, {completed: false});
+    }
+
+
+    res.json(filteredTodos);
 });
 
 //GET /todos:id
