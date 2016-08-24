@@ -16,20 +16,22 @@ app.use(bodyParser.json());
 // var middleware = require('./middleware.js');
 //app.use(middleware.logger);
 
-
 app.get('/', function (req, res) { //middleware.requireAuthentication
     res.send('Todo API ROOT');
 });
 
 // app.use(express.static(__dirname +'/public'));
-// GET /todos
 
+
+// GET /todos
 app.get('/todos', function (req, res) { //middleware.requireAuthentication
+    "use strict";
     res.json(todos);
 });
 
 //GET /todos:id
 app.get('/todos/:id', function (req, res) { //middleware.requireAuthentication
+    "use strict";
     var todoId = parseInt(req.params.id, 10),
         matchedTodo = _.findWhere(todos, {id: todoId});
     if (matchedTodo) {
@@ -42,34 +44,70 @@ app.get('/todos/:id', function (req, res) { //middleware.requireAuthentication
 
 //POST /todos
 app.post('/todos', function (req, res) {
-        var body = _.pick(req.body, 'description', 'completed');
-        if (!_.isBoolean(body.completed) || !_.isString(body.description || body.description.trim().length === 0)) {
-            res.status(400)
-               .send();
-        }
-        body.description = body.description.trim();
-        body.id = todoNextId++;
-        todos.push(body);
-        res.json(body);
-    });
+    "use strict";
+    var body = _.pick(req.body, 'description', 'completed');
+    if (!_.isBoolean(body.completed) || !_.isString(body.description || body.description.trim().length === 0)) {
+        res.status(400)
+           .send();
+    }
+    body.description = body.description.trim();
+    body.id = todoNextId++;
+    todos.push(body);
+    res.json(body);
+});
 
 // DELETE /todos/:id
 app.delete('/todos/:id', function (req, res) {
     "use strict";
     var todoId = parseInt(req.params.id, 10),
         matchedTodo = _.findWhere(todos, {id: todoId});
-    var x = _.without(todos, matchedTodo);
-    console.log(x);
-   if (!matchedTodo) {
-       res.status(404)
-          .json({"error":"no todos found with that id"})
-          .send();
+
+    if (!matchedTodo) {
+        res.status(404)
+           .json({"error": "no todos found with that id"})
+           .send();
     } else {
-       todos = _.without(todos, matchedTodo);
-       res.json(matchedTodo);
-   }
+        todos = _.without(todos, matchedTodo);
+        res.json(matchedTodo);
+    }
 });
 
+//PUT /todos/:id
+app.put('/todos/:id', function (req, res) {
+    "use strict";
+
+    var todoId = parseInt(req.params.id, 10),
+        matchedTodo = _.findWhere(todos, {id: todoId}),
+        body = _.pick(req.body, 'description', 'completed'),
+        validAttr = {};
+
+    if (!matchedTodo) {
+        return res.status(404)
+                  .json({"error": "no todos found with that id"})
+                  .send();
+    }
+
+    if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
+        validAttr.completed = body.completed;
+    } else if (body.hasOwnProperty('completed')) {
+        //bad
+        return res.status(400)
+                  .send();
+    }
+    if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
+        validAttr.description = body.description;
+    } else if (body.hasOwnProperty('description')) {
+        //bad
+        return res.status(400)
+                  .send();
+    }
+
+    matchedTodo =  _.extend(matchedTodo, validAttr);
+    res.json(matchedTodo);
+});
+
+//Runnning the server
 app.listen(PORT, function () {
+    "use strict";
     console.log('Express Server started on PORT: ' + PORT + "!");
 });
