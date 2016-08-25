@@ -7,10 +7,12 @@
 var express = require('express'),
     bodyParser = require('body-parser'),
     _ = require('underscore'),
+    db = require('./db.js'),
     PORT = process.env.PORT || 3000,
     todos = [],
     todoNextId = 1,
     app = express();
+
 app.use(bodyParser.json());
 
 // var middleware = require('./middleware.js');
@@ -43,7 +45,8 @@ app.get('/todos', function (req, res) { //middleware.requireAuthentication
     if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
         filteredTodos = _.filter(filteredTodos, function (todo) {
             "use strict";
-            return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
+            return todo.description.toLowerCase()
+                       .indexOf(queryParams.q.toLowerCase()) > -1;
         });
     }
     res.json(filteredTodos);
@@ -66,14 +69,23 @@ app.get('/todos/:id', function (req, res) { //middleware.requireAuthentication
 app.post('/todos', function (req, res) {
     "use strict";
     var body = _.pick(req.body, 'description', 'completed');
-    if (!_.isBoolean(body.completed) || !_.isString(body.description || body.description.trim().length === 0)) {
-        res.status(400)
-           .send();
-    }
-    body.description = body.description.trim();
-    body.id = todoNextId++;
-    todos.push(body);
-    res.json(body);
+
+    db.todo.create(body)
+      .then(function (todo) {
+          res.json(todo.toJSON());
+      }, function (e) {
+          res.status(400)
+             .json(e);
+      });
+
+    // if (!_.isBoolean(body.completed) || !_.isString(body.description || body.description.trim().length === 0)) {
+    //     res.status(400)
+    //        .send();
+    // }
+    // body.description = body.description.trim();
+    // body.id = todoNextId++;
+    // todos.push(body);
+    // res.json(body);
 });
 
 // DELETE /todos/:id
@@ -126,8 +138,17 @@ app.put('/todos/:id', function (req, res) {
     res.json(matchedTodo);
 });
 
-//Running the server
-app.listen(PORT, function () {
-    "use strict";
-    console.log('Express Server started on PORT: ' + PORT + "!");
-});
+// sync
+db.sequelize.sync()
+  .then(function () {
+
+      //Running the server
+      app.listen(PORT, function () {
+          "use strict";
+          console.log('Express Server started on PORT: ' + PORT + "!");
+      });
+  });
+
+
+
+

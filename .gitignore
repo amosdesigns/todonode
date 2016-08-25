@@ -141,3 +141,5 @@ npm-debug.log
 #### private files for api
 node-course/async/openweather.txt
 
+### dev data
+data/**.sqlite
