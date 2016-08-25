@@ -112,38 +112,35 @@ app.delete('/todos/:id', function (req, res) {
       });
 });
 
-//PUT /todos/:id
-app.put('/todos/:id', function (req, res) {
+// PUT /todos/:id
+app.put('/todos/:id', function(req, res) {
     "use strict";
 
     var todoId = parseInt(req.params.id, 10),
         body = _.pick(req.body, 'description', 'completed'),
-        attr = {};
+        attrib = {};
 
     if (body.hasOwnProperty('completed')) {
-        attr.completed = body.completed;
+        attrib.completed = body.completed;
     }
 
     if (body.hasOwnProperty('description')) {
-        attr.description = body.description;
+        attrib.description = body.description;
     }
-    db.todo.findById(todoId)
-      .then(function (todo) {
-          if (todo) {
-              todo.update(attr).then(function (todo) {
-                  res.json(todo.toJSON());
-              }, function (e) {
-                  res.status(400)
-                     .json(e);
-              });
-          } else {
-              res.status(404)
-                 .send();
-          }
-      }, function () {
-          res.status(500)
-             .send();
-      });
+
+    db.todo.findById(todoId).then(function(todo) {
+        if (todo) {
+            todo.update(attrib).then(function(todo) {
+                res.json(todo.toJSON());
+            }, function(e) {
+                res.status(400).json(e);
+            });
+        } else {
+            res.status(404).send();
+        }
+    }, function() {
+        res.status(500).send();
+    });
 });
 
 // sync
