@@ -2,10 +2,18 @@
  * Created by Jerome on 8/25/16.
  */
 var Sequelize = require('sequelize'),
+    env = process.env.NODE_ENV || 'development',
+    sequelize;
+if (env === 'production') {
+    sequelize = new Sequelize(proocess.env.DATABASE_URL, {
+        'dialect': 'postgres'
+    });
+} else {
     sequelize = new Sequelize(undefined, undefined, undefined, {
         'dialect': 'sqlite',
         'storage': __dirname + "/data/dev-todo-api.sqlite"
     });
+}
 
 var db = {};
 
