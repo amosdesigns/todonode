@@ -10,7 +10,7 @@ var express = require('express'),
     db = require('./db.js'),
     PORT = process.env.PORT || 3000,
     todos = [],
-    todoNextId = 1,
+    users = [],
     app = express();
 
 app.use(bodyParser.json());
@@ -143,12 +143,50 @@ app.put('/todos/:id', function(req, res) {
     });
 });
 
+//users post request
+app.post('/users', function (req, res) {
+    "use strict";
+    var body = _.pick(req.body, 'email', 'password');
+
+    db.user.create(body)
+      .then(function (user) {
+          res.json(user.toJSON());
+      }, function (e) {
+          res.status(400)
+             .json(e);
+      });
+});
+
+
+
+//GET /users:id
+// app.get('/users/:id', function (req, res) {
+//     "use strict";
+//     var todoId = parseInt(req.params.id, 10);
+//
+//     db.todo.findById(todoId)
+//       .then(function (todo) {
+//           if (!!todo) {
+//               res.json(todo.toJSON());
+//           } else {
+//               res.status(404)
+//                  .send();
+//           }
+//       }, function (e) {
+//           res.status(500)
+//              .send();
+//       });
+// });
+
+
+
+
 // sync
 db.sequelize.sync()
-  .then(function () {
+  .then(function() {
 
       //Running the server
-      app.listen(PORT, function () {
+      app.listen(PORT, function() {
           "use strict";
           console.log('Express Server started on PORT: ' + PORT + "!");
       });
