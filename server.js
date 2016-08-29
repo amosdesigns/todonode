@@ -9,16 +9,17 @@ var express = require('express'),
     _ = require('underscore'),
     db = require('./db.js'),
     bcrypt = require('bcrypt'),
+    middleware = require('./middleware')(db),
     PORT = process.env.PORT || 3000,
     todos = [],
     app = express();
 
 app.use(bodyParser.json());
 
-// var middleware = require('./middleware.js');
+
 //app.use(middleware.logger);
 
-app.get('/', function (req, res) { //middleware.requireAuthentication
+app.get('/',  middleware.requireAuthentication, function (req, res) {
     res.send('Todo API ROOT');
 });
 
@@ -26,7 +27,7 @@ app.get('/', function (req, res) { //middleware.requireAuthentication
 
 
 // GET /todos?completed=true&q=work
-app.get('/todos', function (req, res) { //middleware.requireAuthentication
+app.get('/todos', middleware.requireAuthentication, function (req, res) {
     "use strict";
     var query = req.query,
         where = {};
@@ -54,7 +55,7 @@ app.get('/todos', function (req, res) { //middleware.requireAuthentication
 });
 
 //GET /todos:id
-app.get('/todos/:id', function (req, res) { //middleware.requireAuthentication
+app.get('/todos/:id',  middleware.requireAuthentication, function (req, res) {
     "use strict";
     var todoId = parseInt(req.params.id, 10);
 
@@ -73,7 +74,7 @@ app.get('/todos/:id', function (req, res) { //middleware.requireAuthentication
 });
 
 //POST /todos
-app.post('/todos', function (req, res) {
+app.post('/todos', middleware.requireAuthentication, function (req, res) {
     "use strict";
     var body = _.pick(req.body, 'description', 'completed');
 
@@ -87,7 +88,7 @@ app.post('/todos', function (req, res) {
 });
 
 // DELETE /todos/:id
-app.delete('/todos/:id', function (req, res) {
+app.delete('/todos/:id', middleware.requireAuthentication, function (req, res) {
     "use strict";
     var todoId = parseInt(req.params.id, 10);
 
@@ -113,7 +114,7 @@ app.delete('/todos/:id', function (req, res) {
 });
 
 // PUT /todos/:id
-app.put('/todos/:id', function (req, res) {
+app.put('/todos/:id',  middleware.requireAuthentication, function (req, res) {
     "use strict";
 
     var todoId = parseInt(req.params.id, 10),
@@ -149,7 +150,7 @@ app.put('/todos/:id', function (req, res) {
 });
 
 // users post request
-app.post('/users', function (req, res) {
+app.post('/users',  function (req, res) {
     "use strict";
     var body = _.pick(req.body, 'email', 'password');
 
@@ -191,7 +192,11 @@ db.sequelize.sync({force: true})
       //Running the server
       app.listen(PORT, function () {
           "use strict";
-          console.log('NEW Express Server started on PORT: ' + PORT + "!");
+          console.log('***********************************************************');
+          console.log('***********************************************************');
+          console.log('******** NEW Express Server started on PORT: ' + PORT + "! ********");
+          console.log('***********************************************************');
+          console.log('***********************************************************');
       });
   });
 

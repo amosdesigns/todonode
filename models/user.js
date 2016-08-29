@@ -7,11 +7,10 @@ var bcrypt = require('bcrypt'),
     jwt = require('jsonwebtoken');
 
 
-
 module.exports = function (sequelize, DataTypes) {
     'use strict';
 
-    var user =  sequelize.define('user', {
+    var user = sequelize.define('user', {
         email: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -32,9 +31,9 @@ module.exports = function (sequelize, DataTypes) {
             validate: {
                 len: [8, 100]
             },
-            set: function (value){
-               var salt = bcrypt.genSaltSync(10),
-                   hashedPassword = bcrypt.hashSync(value, salt);
+            set: function (value) {
+                var salt = bcrypt.genSaltSync(10),
+                    hashedPassword = bcrypt.hashSync(value, salt);
                 this.setDataValue('password', value);
                 this.setDataValue('salt', salt);
                 this.setDataValue('password_hash', hashedPassword);
@@ -51,33 +50,58 @@ module.exports = function (sequelize, DataTypes) {
                 }
             }
         },
-        classMethods:{
-           authenticate: function (body) {
-               return new Promise (function (resolve, reject) {
-                   if (typeof body.email !== 'string' || typeof body.password !== 'string'){
-                       // if bad res return 400
-                       return reject();
-                   }
+        classMethods: {
+            authenticate: function (body) {
+                return new Promise(function (resolve, reject) {
+                    if (typeof body.email !== 'string' || typeof body.password !== 'string') {
+                        // if bad res return 400
+                        return reject();
+                    }
 
-                   // findon()
-                   user.findOne({
-                       where: {
-                           email: body.email
-                       }
-                   }).then(function(user) {
-                       if (!user || !bcrypt.compareSync(body.password, user.get('password_hash'))){
-                           return reject();
-                       }
+                    // findon()
+                    user.findOne({
+                        where: {
+                            email: body.email
+                        }
+                    })
+                        .then(function (user) {
+                            if (!user || !bcrypt.compareSync(body.password, user.get('password_hash'))) {
+                                return reject();
+                            }
 
-                       resolve(user);
-                   }, function (e) {
-                       return reject();
-                   });
-               });
-           }
+                            resolve(user);
+                        }, function (e) {
+                            return reject();
+                        });
+                });
+            },
+            findByToken: function (token) {
+                return new Promise(function (resolve, reject) {
+                    try {
+                        var decodeedJWT = jwt.verify(token, 'qwerty098'),
+                            bytes = cryptojs.AES.decrypt(decodedJWT.token, 'abc123!@#!'),
+                            tokenData = JSON.parse(bytes.toString(cryptojs.enc.Utf8));
+
+                        user.findById(tokenData.id)
+                            .then(function (user) {
+                                if (user) {
+                                    resolve(user);
+                                } else {
+                                    reject();
+                                }
+                            }, function (e) {
+                                reject();
+                            });
+
+                    } catch (e) {
+                        reject();
+                    }
+                });
+
+            }
         },
         instanceMethods: {
-            toPublicJSON: function() {
+            toPublicJSON: function () {
                 var json = this.toJSON();
                 return _.pick(json, 'id', 'email', 'createdAt', 'updatedAt');
             },
@@ -87,13 +111,15 @@ module.exports = function (sequelize, DataTypes) {
                 }
 
                 try {
-                    var stringData = JSON.stringify({id: this.get('id'), type: type});
-                    var encryptedData = cryptojs.AES.encrypt(stringData, 'abc123!@#!').toString();
-                    var token = jwt.sign({
-                        token: encryptedData
-                    }, 'qwerty098');
+                    var stringData = JSON.stringify({id: this.get('id'), type: type}),
+                        encryptedData = cryptojs.AES.encrypt(stringData, 'abc123!@#!')
+                                                .toString(),
+                        token = jwt.sign({
+                            token: encryptedData
+                        }, 'qwerty098');
 
                     return token;
+
                 } catch (e) {
                     console.error(e);
                     return undefined;
