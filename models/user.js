@@ -63,8 +63,7 @@ module.exports = function (sequelize, DataTypes) {
                         where: {
                             email: body.email
                         }
-                    })
-                        .then(function (user) {
+                    }).then(function (user) {
                             if (!user || !bcrypt.compareSync(body.password, user.get('password_hash'))) {
                                 return reject();
                             }
@@ -78,7 +77,7 @@ module.exports = function (sequelize, DataTypes) {
             findByToken: function (token) {
                 return new Promise(function (resolve, reject) {
                     try {
-                        var decodeedJWT = jwt.verify(token, 'qwerty098'),
+                        var decodedJWT = jwt.verify(token, 'qwerty098'),
                             bytes = cryptojs.AES.decrypt(decodedJWT.token, 'abc123!@#!'),
                             tokenData = JSON.parse(bytes.toString(cryptojs.enc.Utf8));
 

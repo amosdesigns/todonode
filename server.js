@@ -17,20 +17,17 @@ var express = require('express'),
 app.use(bodyParser.json());
 
 
-//app.use(middleware.logger);
-
-app.get('/',  middleware.requireAuthentication, function (req, res) {
+app.get('/',  function (req, res) {
     res.send('Todo API ROOT');
 });
-
-// app.use(express.static(__dirname +'/public'));
-
 
 // GET /todos?completed=true&q=work
 app.get('/todos', middleware.requireAuthentication, function (req, res) {
     "use strict";
     var query = req.query,
-        where = {};
+        where = {
+            userId: req.user.get('id')
+        };
 
     if (query.hasOwnProperty('completed') && query.completed === 'true') {
         where.completed = true;
@@ -45,8 +42,9 @@ app.get('/todos', middleware.requireAuthentication, function (req, res) {
         };
     }
 
-    db.todo.findAll({where: where})
-      .then(function (todos) {
+    db.todo.findAll({
+        where: where
+    }).then(function (todos) {
           res.json(todos);
       }, function (e) {
           res.status(500)
@@ -59,8 +57,12 @@ app.get('/todos/:id',  middleware.requireAuthentication, function (req, res) {
     "use strict";
     var todoId = parseInt(req.params.id, 10);
 
-    db.todo.findById(todoId)
-      .then(function (todo) {
+    db.todo.findOne({
+        where: {
+            id: todoId,
+            userId: req.user.get('id')
+        }
+    }).then(function (todo) {
           if (!!todo) {
               res.json(todo.toJSON());
           } else {
@@ -78,13 +80,15 @@ app.post('/todos', middleware.requireAuthentication, function (req, res) {
     "use strict";
     var body = _.pick(req.body, 'description', 'completed');
 
-    db.todo.create(body)
-      .then(function (todo) {
-          res.json(todo.toJSON());
-      }, function (e) {
-          res.status(400)
-             .json(e);
-      });
+    db.todo.create(body).then(function(todo) {
+        req.user.addTodo(todo).then(function () {
+            return todo.reload();
+        }).then(function (todo) {
+            res.json(todo.toJSON());
+        });
+    }, function(e) {
+        res.status(400).json(e);
+    });
 });
 
 // DELETE /todos/:id
@@ -94,10 +98,10 @@ app.delete('/todos/:id', middleware.requireAuthentication, function (req, res) {
 
     db.todo.destroy({
         where: {
-            id: todoId
+            id: todoId,
+            userId: req.user.get('id')
         }
-    })
-      .then(function (rowsDeleted) {
+    }).then(function (rowsDeleted) {
           if (rowsDeleted === 0) {
               res.status(404)
                  .json({
@@ -129,8 +133,12 @@ app.put('/todos/:id',  middleware.requireAuthentication, function (req, res) {
         attrib.description = body.description;
     }
 
-    db.todo.findById(todoId)
-      .then(function (todo) {
+    db.todo.findOne({
+        where: {
+            id: todoId,
+            userId: req.user.get('id')
+        }
+    }).then(function (todo) {
           if (todo) {
               todo.update(attrib)
                   .then(function (todo) {
@@ -148,6 +156,16 @@ app.put('/todos/:id',  middleware.requireAuthentication, function (req, res) {
              .send();
       });
 });
+
+/**
+ *
+ *
+ *
+ * user login request tasks
+ *
+ *
+ *
+ */
 
 // users post request
 app.post('/users',  function (req, res) {
@@ -169,7 +187,7 @@ app.post('/users/login', function (req, res) {
     var body = _.pick(req.body, 'email', 'password');
 
     db.user.authenticate(body)
-      .then(function () {
+      .then(function (user) {
           var token = user.generateToken('authentication');
 
           if (token) {
