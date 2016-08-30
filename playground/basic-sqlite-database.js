@@ -1,71 +1,61 @@
-/**
- * Created by Jerome on 8/24/16.
- */
 var Sequelize = require('sequelize'),
     sequelize = new Sequelize(undefined, undefined, undefined, {
         'dialect': 'sqlite',
-        'storage': __dirname + "/basic-sqlite-database.sqlite"
+        'storage': __dirname + '/basic-sqlite-database.sqlite'
+    }),
+    Todo = sequelize.define('todo', {
+        description: {
+            type: Sequelize.STRING,
+            allowNull: false,
+            validate: {
+                len: [1, 250]
+            }
+        },
+        completed: {
+            type: Sequelize.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
+        }
+    }),
+    User = sequelize.define('user', {
+        email: Sequelize.STRING
     });
 
-var Todo = sequelize.define('todo', {
-    description: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        validate: {
-            len: [1, 250]
-        }
-    },
-    completed: {
-        type: Sequelize.BOOLEAN,
-        allowNull: false,
-        defaultValue: false
-    }
-});
+Todo.belongsTo(User);
+User.hasMany(Todo);
 
 sequelize.sync({
-    // force: true
+    //force: true
 })
          .then(function () {
+             "use strict";
              console.log('Everything is synced');
 
-             Todo.findById(3)
-                 .then(function (todo) {
-                     if (todo) {
-                         console.log(todo.toJSON());
-                     } else {
-                         console.log('Todo not found');
-                     }
+             User.findById(1)
+                 .then(function (user) {
+                     "use strict";
+                     user.getTodos({
+                         where: {
+                             completed: true
+                         }
+                     })
+                         .then(function (todos) {
+                             "use strict";
+                             todos.forEach(function (todo) {
+                                 console.log(todo.toJSON());
+                             });
+                         });
                  });
 
-
-             //     Todo.create({
-             //         description: 'Cook dinner'
-             //     })
-             //         .then(function (todo) {
-             //             return Todo.create({
-             //                 description: 'Cook lunch'
-             //             });
-             //
-             //         })
-             //         .then(function () {
-             //             // return Todo.findyById(1);
-             //             return Todo.findAll({
-             //                 where: {
-             //                     completed: false
-             //                 }
-             //             });
-             //         })
-             //         .then(function (todos) {
-             //             if (todos) {
-             //                 todos.forEach(function (todo) {
-             //                     console.log(todo.toJSON());
-             //                 })
-             //
-             //             } else {
-             //                 console.log('no todo found!');
-             //             }
-             //         })
-             //         .catch(function (e) {
-             //             console.log(e);
-             //         });
+             // User.create({
+             // 	email: 'mail@happyone.com'
+             // }).then(function () {
+             // 	return Todo.create({
+             // 		description: 'Clean yard and home'
+             // 	});
+             // }).then(function (todo) {
+             // 	User.findById(1).then(function (user) {
+             // 		user.addTodo(todo);
+             // 	});
+             // });
          });
